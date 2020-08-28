@@ -1,6 +1,6 @@
 # sample-controller
 
-This repository implements a simple controller for watching Icecream resources as
+This repository implements a simple controller for watching **Icecream** resources as
 defined with a CustomResourceDefinition (CRD).
 
 **Note:** go-get or vendor this package as `k8s.io/sample-controller`.
