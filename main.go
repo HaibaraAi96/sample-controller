@@ -24,12 +24,16 @@ import (
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/klog/v2"
+
 	// Uncomment the following line to load the gcp plugin (only required to authenticate against GKE clusters).
 	// _ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 
 	clientset "k8s.io/sample-controller/pkg/generated/clientset/versioned"
 	informers "k8s.io/sample-controller/pkg/generated/informers/externalversions"
 	"k8s.io/sample-controller/pkg/signals"
+
+	icecreamclientset "k8s.io/sample-controller/pkg/client_icecream/clientset/versioned"
+	icecreaminformers "k8s.io/sample-controller/pkg/client_icecream/informers/externalversions"
 )
 
 var (
@@ -59,20 +63,35 @@ func main() {
 		klog.Fatalf("Error building example clientset: %s", err.Error())
 	}
 
+	icecreamClient, err := icecreamclientset.NewForConfig(cfg)
+	if err != nil {
+		klog.Fatalf("Error building icecream clientset: %s", err.Error())
+	}
+
 	kubeInformerFactory := kubeinformers.NewSharedInformerFactory(kubeClient, time.Second*30)
 	exampleInformerFactory := informers.NewSharedInformerFactory(exampleClient, time.Second*30)
+	icecreamInformerFactory := icecreaminformers.NewSharedInformerFactory(icecreamClient, time.Second*30)
 
 	controller := NewController(kubeClient, exampleClient,
 		kubeInformerFactory.Apps().V1().Deployments(),
 		exampleInformerFactory.Samplecontroller().V1alpha1().Foos())
 
+	icecreamController := NewIcecreamController(kubeClient, icecreamClient,
+		kubeInformerFactory.Apps().V1().Deployments(),
+		icecreamInformerFactory.Samplecontroller().V1alpha1().Icecreams())
+
 	// notice that there is no need to run Start methods in a separate goroutine. (i.e. go kubeInformerFactory.Start(stopCh)
 	// Start method is non-blocking and runs all registered informers in a dedicated goroutine.
 	kubeInformerFactory.Start(stopCh)
 	exampleInformerFactory.Start(stopCh)
+	icecreamInformerFactory.Start(stopCh)
 
 	if err = controller.Run(2, stopCh); err != nil {
 		klog.Fatalf("Error running controller: %s", err.Error())
+	}
+
+	if err = icecreamController.Run(2, stopCh); err != nil {
+		klog.Fatalf("Error running icecream controller: %s", err.Error())
 	}
 }
 
