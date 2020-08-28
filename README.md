@@ -1,21 +1,20 @@
 # sample-controller
 
-This repository implements a simple controller for watching Foo resources as
+This repository implements a simple controller for watching Icecream resources as
 defined with a CustomResourceDefinition (CRD).
 
 **Note:** go-get or vendor this package as `k8s.io/sample-controller`.
 
 This particular example demonstrates how to perform basic operations such as:
 
-* How to register a new custom resource (custom resource type) of type `Foo` using a CustomResourceDefinition.
-* How to create/get/list instances of your new resource type `Foo`.
+* How to register a new custom resource (custom resource type) of type `Icecream` using a CustomResourceDefinition.
+* How to create/get/list instances of your new resource type `Icecream`.
 * How to setup a controller on resource handling create/update/delete events.
 
 It makes use of the generators in [k8s.io/code-generator](https://github.com/kubernetes/code-generator)
-to generate a typed client, informers, listers and deep-copy functions. You can
-do this yourself using the `./hack/update-codegen.sh` script.
+to generate a typed client, informers, listers and deep-copy functions. 
 
-The `update-codegen` script will automatically generate the following files &
+By using the `./hack/update-codegen.sh` script, we automatically generate the following files &
 directories:
 
 * `pkg/apis/samplecontroller/v1alpha1/zz_generated.deepcopy.go`
@@ -27,26 +26,9 @@ instead run the `update-codegen` script to generate your own.
 
 ## Details
 
-The sample controller uses [client-go library](https://github.com/kubernetes/client-go/tree/master/tools/cache) extensively.
-The details of interaction points of the sample controller with various mechanisms from this library are
-explained [here](docs/controller-client-go.md).
+
 
 ## Fetch sample-controller and its dependencies
-
-Like the rest of Kubernetes, sample-controller has used
-[godep](https://github.com/tools/godep) and `$GOPATH` for years and is
-now adopting go 1.11 modules.  There are thus two alternative ways to
-go about fetching this demo and its dependencies.
-
-### Fetch with godep
-
-When NOT using go 1.11 modules, you can use the following commands.
-
-```sh
-go get -d k8s.io/sample-controller
-cd $GOPATH/src/k8s.io/sample-controller
-godep restore
-```
 
 ### When using go 1.11 modules
 
@@ -58,20 +40,9 @@ git clone https://github.com/kubernetes/sample-controller.git
 cd sample-controller
 ```
 
-Note, however, that if you intend to
-[generate code](#changes-to-the-types) then you will also need the
-code-generator repo to exist in an old-style location.  One easy way
-to do this is to use the command `go mod vendor` to create and
-populate the `vendor` directory.
+- You also need to clone the **code-generator repo** to exist in $GOPATH/k8s.io/  
+- An alternative way to do this is to use the command `go mod vendor` to create and populate the `vendor` directory
 
-### A Note on kubernetes/kubernetes
-
-If you are developing Kubernetes according to
-https://github.com/kubernetes/community/blob/master/contributors/guide/github-workflow.md
-then you already have a copy of this demo in
-`kubernetes/staging/src/k8s.io/sample-controller` and its dependencies
---- including the code generator --- are in usable locations
-(valid for all Go versions).
 
 ## Purpose
 
@@ -111,68 +82,31 @@ Some example use cases:
 Each instance of your custom resource has an attached Spec, which should be defined via a `struct{}` to provide data format validation.
 In practice, this Spec is arbitrary key-value data that specifies the configuration/behavior of your Resource.
 
-For example, if you were implementing a custom resource for a Database, you might provide a DatabaseSpec like the following:
+For example, if you were implementing a custom resource for an Icecream, you might provide a IcecreamSpec like the following:
 
 ``` go
-type DatabaseSpec struct {
-	Databases []string `json:"databases"`
-	Users     []User   `json:"users"`
-	Version   string   `json:"version"`
+// Icecream is a specification for a Icecream resource
+type Icecream struct {
+	metav1.TypeMeta   `json:",inline"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
+
+	Spec   IcecreamSpec   `json:"spec"`
+	Status IcecreamStatus `json:"status"`
 }
 
-type User struct {
-	Name     string `json:"name"`
-	Password string `json:"password"`
+// IcecreamSpec is the spec for an Icecream resource
+type IcecreamSpec struct {
+	DeploymentName string `json:"deploymentName"`
+	Replicas       *int32 `json:"replicas"`
 }
 ```
 
-## Validation
-
-To validate custom resources, use the [`CustomResourceValidation`](https://kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/#validation) feature.
-
-This feature is beta and enabled by default in v1.9.
-
-### Example
-
-The schema in [`crd-validation.yaml`](./artifacts/examples/crd-validation.yaml) applies the following validation on the custom resource:
-`spec.replicas` must be an integer and must have a minimum value of 1 and a maximum value of 10.
-
-In the above steps, use `crd-validation.yaml` to create the CRD:
-
-```sh
-# create a CustomResourceDefinition supporting validation
-kubectl create -f artifacts/examples/crd-validation.yaml
-```
-
-## Subresources
-
-Custom Resources support `/status` and `/scale` subresources as a [beta feature](https://kubernetes.io/docs/tasks/access-kubernetes-api/custom-resources/custom-resource-definitions/#subresources) in v1.11 and is enabled by default.
-This feature is [alpha](https://v1-10.docs.kubernetes.io/docs/tasks/access-kubernetes-api/extend-api-custom-resource-definitions/#subresources) in v1.10 and to enable it you need to set the `CustomResourceSubresources` feature gate on the [kube-apiserver](https://kubernetes.io/docs/admin/kube-apiserver):
-
-```sh
---feature-gates=CustomResourceSubresources=true
-```
-
-### Example
-
-The CRD in [`crd-status-subresource.yaml`](./artifacts/examples/crd-status-subresource.yaml) enables the `/status` subresource
-for custom resources.
-This means that [`UpdateStatus`](./controller.go#L330) can be used by the controller to update only the status part of the custom resource.
-
-To understand why only the status part of the custom resource should be updated, please refer to the [Kubernetes API conventions](https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status).
-
-In the above steps, use `crd-status-subresource.yaml` to create the CRD:
-
-```sh
-# create a CustomResourceDefinition supporting the status subresource
-kubectl create -f artifacts/examples/crd-status-subresource.yaml
-```
 
 ## Cleanup
 
 You can clean up the created CustomResourceDefinition with:
 
-    kubectl delete crd foos.samplecontroller.k8s.io
+    kubectl delete crd icecreams.controller.nicoleh.io
 
 ## Compatibility
 
@@ -181,7 +115,5 @@ k8s.io/client-go.
 
 ## Where does it come from?
 
-`sample-controller` is synced from
+`sample-controller` is cloned from
 https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/sample-controller.
-Code changes are made in that location, merged into k8s.io/kubernetes and
-later synced here.
