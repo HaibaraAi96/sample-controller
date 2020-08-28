@@ -7,7 +7,7 @@ spec:
   # group name to use for REST API: /apis/<group>/<version>
   group: controller.nicoleh.io
   # list of versions supported by this CustomResourceDefinition
-  versions: v1alpha1
+  version: v1alpha1
   # either Namespaced or Cluster
   scope: Namespaced
   names:
