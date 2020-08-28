@@ -72,9 +72,9 @@ func main() {
 	exampleInformerFactory := informers.NewSharedInformerFactory(exampleClient, time.Second*30)
 	icecreamInformerFactory := icecreaminformers.NewSharedInformerFactory(icecreamClient, time.Second*30)
 
-	controller := NewController(kubeClient, exampleClient,
-		kubeInformerFactory.Apps().V1().Deployments(),
-		exampleInformerFactory.Samplecontroller().V1alpha1().Foos())
+	// controller := NewController(kubeClient, exampleClient,
+	// 	kubeInformerFactory.Apps().V1().Deployments(),
+	// 	exampleInformerFactory.Samplecontroller().V1alpha1().Foos())
 
 	icecreamController := NewIcecreamController(kubeClient, icecreamClient,
 		kubeInformerFactory.Apps().V1().Deployments(),
@@ -86,9 +86,9 @@ func main() {
 	exampleInformerFactory.Start(stopCh)
 	icecreamInformerFactory.Start(stopCh)
 
-	if err = controller.Run(2, stopCh); err != nil {
-		klog.Fatalf("Error running controller: %s", err.Error())
-	}
+	// if err = controller.Run(2, stopCh); err != nil {
+	// 	klog.Fatalf("Error running controller: %s", err.Error())
+	// }
 
 	if err = icecreamController.Run(2, stopCh); err != nil {
 		klog.Fatalf("Error running icecream controller: %s", err.Error())
